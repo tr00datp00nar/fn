@@ -14,7 +14,6 @@ import (
 	"io"
 	"log"
 	"net/url"
-	"os"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -77,11 +76,46 @@ func GetViperConfig(n, t, p string) {
 // ExecBash runs the provided command using `exec.Command("bash", "-c", cmd)`
 //
 // Redirects c.Stdout and c.Stderr to os.Stdout and os.Stderr
-func ExecBash(cmd string) (out io.Writer) {
-	c := exec.Command("bash", "-c", cmd)
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
-	c.Run()
+func ExecBash(cmd string) (o string, e string, err error) {
+	// c := exec.Command("bash", "-c", cmd)
+	// c.Stdout = os.Stdout
+	// c.Stderr = os.Stderr
+	// c.Run()
+	//
+	// return c.Stdout
+	return newCmd("bash", "-c", cmd).Output()
+}
 
-	return c.Stdout
+type buf []byte
+
+func (b *buf) Read(p []byte) (n int, err error) {
+	n = copy(p, *b)
+	*b = (*b)[n:]
+	if n == 0 {
+		return 0, io.EOF
+	}
+	return n, nil
+}
+
+func (b *buf) Write(p []byte) (n int, err error) {
+	*b = append(*b, p...)
+	return len(p), nil
+}
+
+func (b *buf) String() string { return string(*b) }
+
+type cmd struct {
+	cmd *exec.Cmd
+}
+
+func newCmd(command string, args ...string) *cmd {
+	return &cmd{exec.Command(command, args...)}
+}
+
+func (c *cmd) Output() (stdout, stderr string, err error) {
+	o, e := &buf{}, &buf{}
+	c.cmd.Stdout = o
+	c.cmd.Stderr = e
+	err = c.cmd.Run()
+	return o.String(), e.String(), err
 }
