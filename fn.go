@@ -11,6 +11,7 @@ package fn
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net/url"
 	"os"
@@ -75,10 +76,12 @@ func GetViperConfig(n, t, p string) {
 
 // ExecBash runs the provided command using `exec.Command("bash", "-c", cmd)`
 //
-// Redirects c.Stdout and c.Stderr to os.Stdout and os.Stdoerr
-func ExecBash(cmd string) {
+// Redirects c.Stdout and c.Stderr to os.Stdout and os.Stderr
+func ExecBash(cmd string) (out io.Writer) {
 	c := exec.Command("bash", "-c", cmd)
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
 	c.Run()
+
+	return c.Stdout
 }
