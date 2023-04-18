@@ -73,17 +73,14 @@ func GetViperConfig(n, t, p string) {
 	}
 }
 
+// NewCmd runs the provided command using `exec.Command()`
+func NewCmd(command string, args ...string) *cmd {
+	return &cmd{exec.Command(command, args...)}
+}
+
 // ExecBash runs the provided command using `exec.Command("bash", "-c", cmd)`
-//
-// Redirects c.Stdout and c.Stderr to os.Stdout and os.Stderr
 func ExecBash(cmd string) (o string, e string, err error) {
-	// c := exec.Command("bash", "-c", cmd)
-	// c.Stdout = os.Stdout
-	// c.Stderr = os.Stderr
-	// c.Run()
-	//
-	// return c.Stdout
-	return newCmd("bash", "-c", cmd).Output()
+	return NewCmd("bash", "-c", cmd).Output()
 }
 
 type buf []byte
@@ -106,10 +103,6 @@ func (b *buf) String() string { return string(*b) }
 
 type cmd struct {
 	cmd *exec.Cmd
-}
-
-func newCmd(command string, args ...string) *cmd {
-	return &cmd{exec.Command(command, args...)}
 }
 
 func (c *cmd) Output() (stdout, stderr string, err error) {
